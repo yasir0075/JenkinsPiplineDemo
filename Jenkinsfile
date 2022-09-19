@@ -84,7 +84,8 @@ node('master') {
                                         '   [ \n' +
                                         '       ip: "127.0.0.1", \n' +
                                         '       hostNames: "{localhost,local}"\n' +
-//                                         '   ], \n' +
+                                        '   ]
+//                             , \n' +
 //                                         '   [ \n' +
 //                                         '       ip: "192.168.1.2", \n' +
 //                                         '       hostNames: "{proxy.com,example.com}"\n' +
