@@ -84,11 +84,11 @@ node('master') {
                                         '   [ \n' +
                                         '       ip: "127.0.0.1", \n' +
                                         '       hostNames: "{localhost,local}"\n' +
-                                        '   ], \n' +
-                                        '   [ \n' +
-                                        '       ip: "192.168.1.2", \n' +
-                                        '       hostNames: "{proxy.com,example.com}"\n' +
-                                        '   ]\n' +
+//                                         '   ], \n' +
+//                                         '   [ \n' +
+//                                         '       ip: "192.168.1.2", \n' +
+//                                         '       hostNames: "{proxy.com,example.com}"\n' +
+//                                         '   ]\n' +
                                         ']',
                                 defaultValue: params.HOST_ENTRY ?: ''
                         ),
@@ -145,49 +145,7 @@ node('master') {
             sh 'mvn clean install -DskipTests=true'
         }
     }
-    stage('Docker -> Build Image') {
-        echo 'Building Docker image'
-        image_name = buildECRImageName(image_name, build_file)
-        image_ecr_name = env.ECR_REGISTRY + '/' + image_name + ':' + env.BUILD_NUMBER
-        sh '$docker build -t ' + image_ecr_name + ' .'
-    }
-    stage('ECR -> Login') {
-        timeout(10) {
-            echo 'Logging in to ECR registry'
-            sh '$ecr get-login-password --region $REGISTRY_REGION | $docker login --username $REGISTRY_USERNAME --password-stdin $ECR_REGISTRY'
-        }
-    }
-    stage('ECR -> Create Registry') {
-        timeout(10) {
-            echo 'Creating registry if not already exist'
-            sh '$ecr describe-repositories --repository-names ' + image_name  + ' || $ecr create-repository --repository-name ' +
-                    image_name + ' --image-scanning-configuration scanOnPush=true --region $REGISTRY_REGION'
-        }
-    }
-    stage('ECR -> Push Docker Image') {
-        timeout(10) {
-            echo 'Pushing docker image on ECR, image name : ' + image_ecr_name
-            sh '$docker push ' + image_ecr_name
-            echo 'Deleting locally built image with tag'
-            sh '$docker rmi ' + image_ecr_name
-        }
-    }
-    stage('Helm -> Deploy K8s Resources') {
-        echo 'Deploying k8s resources'
-        sh '$helm upgrade --install' +
-                ' --set app.container.image=' + image_ecr_name +
-                ' --set app.namespace=' + pod_service_namespace +
-                ' --set app.version=' + pod_version +
-                ' --set app.name=' + pod_service_name +
-                ' --set app.group=' + pod_service_group +
-                ' --set app.replicaCount=' + pod_replicas +
-                ' --set app.container.terminationGracePeriodSeconds=' + pod_termination_grace_period_sec +
-                ' --set app.service.enabled=' + service_enabled +
-                ' --set app.service.port=' + service_port +
-                ' ' + setHostAliases(host_entry) +
-                ' ' + image_name + ' ./k8s/chart'
-    }
-}
+   
 List buildChoices(List default_build_files, String previous_selection) {
     if (previous_selection == null) {
         return default_build_files;
