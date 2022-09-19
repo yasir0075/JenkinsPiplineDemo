@@ -1,5 +1,5 @@
 #!/usr/bin/env groovy
-node('master') {
+node('build') {
     def image_ecr_name;
     def image_name;
     def scmVars;
