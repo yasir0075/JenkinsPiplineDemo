@@ -1,3 +1,4 @@
+#!/usr/bin/env groovy
 node('master') {
     def image_ecr_name;
     def image_name;
@@ -84,12 +85,12 @@ node('master') {
                                         '   [ \n' +
                                         '       ip: "127.0.0.1", \n' +
                                         '       hostNames: "{localhost,local}"\n' +
-                                        '   ], \n' +
-                            
-//                                         '   [ \n' +
-//                                         '       ip: "192.168.1.2", \n' +
-//                                         '       hostNames: "{proxy.com,example.com}"\n' +
-//                                         '   ]\n' +
+										
+                                       '   ] \n' +
+//                                        '   [ \n' +
+ //                                       '       ip: "192.168.1.2", \n' +
+ //                                       '       hostNames: "{proxy.com,example.com}"\n' +
+ //                                       '   ]\n' +
                                         ']',
                                 defaultValue: params.HOST_ENTRY ?: ''
                         ),
@@ -146,7 +147,14 @@ node('master') {
             sh 'mvn clean install -DskipTests=true'
         }
     }
-   
+    stage('ECR -> Create Registry') {
+        timeout(10) {
+            echo 'Creating registry if not already exist'
+            sh '$ecr describe-repositories --repository-names ' + image_name  + ' || $ecr create-repository --repository-name ' +
+                    image_name + ' --image-scanning-configuration scanOnPush=true --region $REGISTRY_REGION'
+        }
+    }
+}
 List buildChoices(List default_build_files, String previous_selection) {
     if (previous_selection == null) {
         return default_build_files;
@@ -172,12 +180,3 @@ String setHostAliases(def hostEntry) {
     }
     return hostAliases;
 }
-
-
-
-
-
-
-
-
-
